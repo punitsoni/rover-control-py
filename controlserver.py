@@ -8,7 +8,10 @@ import os
 import time
 import logging
 
-class ControlServer(threading.Thread):
+EVENT_SERVER_FINISHED = 0
+EVENT_SERVER_TIMEDOUT = 1
+
+class ControlServer():
     'Listens to control commands from clients'
     maxClients = 1
     SOCK_HOST = ''
@@ -25,6 +28,8 @@ class ControlServer(threading.Thread):
         self.clientAddr = None
         self.setUpLogging()
         self.cLock = threading.Lock()
+        self.eventCb = None
+        self.dataCb = None
 
     def setUpLogging(self):
         logger = logging.getLogger('ControlServer')
@@ -35,7 +40,6 @@ class ControlServer(threading.Thread):
         ch.setFormatter(formatter)
         logger.addHandler(ch)
         self.logger = logger
-
 
     def openSocket(self):
         try:
@@ -51,10 +55,12 @@ class ControlServer(threading.Thread):
     def setLogLevel(self, level):
         self.logger.setLevel(level)
 
-    def start(self, dataCb):
+    def start(self, dataCb, eventCb):
         self.logger.info("starting server thread")
         self.dataCb = dataCb
+        self.eventCb = eventCb
         t = threading.Thread(target=self.run)
+#        t.daemon = True
         t.start()
 
     def sendDataToClient(self, data):
@@ -69,6 +75,10 @@ class ControlServer(threading.Thread):
         self.logger.info("stopping server")
         self.running = False
 
+    def sendEvent(self, event):
+        if self.eventCb:
+            self.eventCb(event, None)
+
     def processClientData(self, data):
         s = data.strip()
         temp = data.split()
@@ -80,7 +90,6 @@ class ControlServer(threading.Thread):
         self.sendDataToClient("ACK")
         self.sendDataToClient("cmd>")
         
-
     def run(self):
         self.openSocket()
         input = [self.server]
@@ -112,18 +121,24 @@ class ControlServer(threading.Thread):
                         self.numClients -= 1
         self.server.close()
         self.logger.info("server finished")
+        self.sendEvent(EVENT_SERVER_FINISHED)
 
 server = None
 def dataCallback(key, val):
-
     if key == "kill":
         server.stop()
     print "key=%s, val=%s" % (key, val)
 
+def eventCallback(event, data):
+    print "event = " + str(event)
+    if(event == EVENT_SERVER_FINISHED):
+        print "server finished, exiting"
+        os._exit(0)
+
 if __name__ == "__main__":
     server = ControlServer()
     #server.setLogLevel(logging.INFO)
-    server.start(dataCallback)
+    server.start(dataCallback, eventCallback)
     while True:
         print("alive")
         time.sleep(2)
