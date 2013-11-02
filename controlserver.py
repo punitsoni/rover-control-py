@@ -79,15 +79,46 @@ class ControlServer():
             self.eventCb(event, None)
 
     def processClientData(self, data):
-        s = data.strip()
-        temp = data.split()
-        if len(temp) != 2:
-            logger.warning("invalid data: " +  data)
-            self.sendDataToClient("NACK")
-            return
-        self.dataCb(temp[0], temp[1])
-        self.sendDataToClient("ACK")
-        self.sendDataToClient("cmd>")
+        logger.info("data rx: " +  data)
+        #s = data.strip()
+        #temp = data.split()
+        #if len(temp) != 2:
+        #    logger.warning("invalid data: " +  data)
+        #    self.sendDataToClient("NACK")
+        #    return
+        #self.dataCb(temp[0], temp[1])
+        #self.sendDataToClient("ACK")
+        #self.sendDataToClient("cmd>")
+    def decodeFrameLen(self, lenInfo):
+        len = (ord(lenInfo[0]) + (ord(lenInfo[1]) << 8) +
+            (ord(lenInfo[2]) << 16) + (ord(lenInfo[3]) << 24))
+        return len
+
+    def recvFrameMessage(self, s):
+        recv_count = 4;
+        data = s.recv(recv_count).decode("ascii")
+        total_rx = len(data)
+        lenInfo = data
+        while total_rx < recv_count:
+            data = s.recv(recv_count - total_rx).decode("ascii")
+            total_rx += len(data)
+            lenInfo = lenInfo + data
+
+        recv_count = self.decodeFrameLen(lenInfo)
+        logger.info("length = %d" % recv_count)
+        
+        data = s.recv(recv_count).decode("ascii")
+        total_rx = len(data)
+        msg = data
+        while total_rx < recv_count:
+            data = s.recv(recv_count - total_rx).decode("ascii")
+            total_rx += len(data)
+            msg = msg + data
+
+        logger.info("msg = " + msg)
+        
+        return msg
+        
         
     def run(self):
         self.openSocket()
@@ -110,14 +141,15 @@ class ControlServer():
                     self.client = client
                     self.sendDataToClient("cmd>")
                 else:
-                    data = s.recv(self.size)
-                    if data:
-                        self.processClientData(data)
-                    else:
-                        s.close()
-                        input.remove(s)
-                        logger.info("client removed")
-                        self.numClients -= 1
+                    self.recvFrameMessage(s)
+                    #data = s.recv(self.size)
+                    #if data:
+                    #    self.processClientData(data)
+                    #else:
+                    #    s.close()
+                    #    input.remove(s)
+                    #    logger.info("client removed")
+                    #    self.numClients -= 1
         self.server.close()
         logger.info("server finished")
         self.sendEvent(EVENT_SERVER_FINISHED)
