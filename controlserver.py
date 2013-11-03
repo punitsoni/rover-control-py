@@ -15,7 +15,6 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(levelname)s %(name)s:%(message)s')
 ch.setFormatter(formatter)
-logger.addHandler(ch)
 
 def setLogLevel(level):
     logger.setLevel(level)
@@ -78,17 +77,6 @@ class ControlServer():
         if self.eventCb:
             self.eventCb(event, None)
 
-    def processClientData(self, data):
-        logger.info("data rx: " +  data)
-        #s = data.strip()
-        #temp = data.split()
-        #if len(temp) != 2:
-        #    logger.warning("invalid data: " +  data)
-        #    self.sendDataToClient("NACK")
-        #    return
-        #self.dataCb(temp[0], temp[1])
-        #self.sendDataToClient("ACK")
-        #self.sendDataToClient("cmd>")
     def decodeFrameLen(self, lenInfo):
         len = (ord(lenInfo[0]) + (ord(lenInfo[1]) << 8) +
             (ord(lenInfo[2]) << 16) + (ord(lenInfo[3]) << 24))
@@ -97,10 +85,14 @@ class ControlServer():
     def recvFrameMessage(self, s):
         recv_count = 4;
         data = s.recv(recv_count).decode("ascii")
+        if !data:
+            return None
         total_rx = len(data)
         lenInfo = data
         while total_rx < recv_count:
             data = s.recv(recv_count - total_rx).decode("ascii")
+            if !data:
+                return None
             total_rx += len(data)
             lenInfo = lenInfo + data
 
@@ -112,9 +104,10 @@ class ControlServer():
         msg = data
         while total_rx < recv_count:
             data = s.recv(recv_count - total_rx).decode("ascii")
+            if !data:
+                return None            
             total_rx += len(data)
             msg = msg + data
-
         logger.info("msg = " + msg)
         
         return msg
@@ -141,7 +134,7 @@ class ControlServer():
                     self.client = client
                     self.sendDataToClient("cmd>")
                 else:
-                    self.recvFrameMessage(s)
+                    msg = self.recvFrameMessage(s)
                     #data = s.recv(self.size)
                     #if data:
                     #    self.processClientData(data)
