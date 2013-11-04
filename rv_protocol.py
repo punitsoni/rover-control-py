@@ -7,6 +7,7 @@
 # |length:1|0x01|cmd_id:1|cmd_data:(length - 2)|
 
 import logging
+import struct 
 
 # setup logging for module
 logger = logging.getLogger(__name__)
@@ -30,14 +31,14 @@ CMD_ID_RESET        = 2
 CMD_ID_MAX          = 255
 
 KEY_MSG_TYPE = "msg-type"
+KEY_MSG_TIMESTAMP = "msg_timestamp"
 KEY_MSG_RAW = "msg-raw"
 KEY_MSG_CMD = "msg-cmd"
 KEY_CMD_ID = "cmd-id"
 KEY_RV_SPEED = "rv-speed"
-KEY_SERVO_ID = "servo-id"
 KEY_SERVO_POS = "servo-pos"
 
-def parseCommand(cmd):
+def parseCommand_old(cmd):
     cmd_id = cmd[0]
     ret = {KEY_CMD_ID:cmd_id}
     if cmd_id == CMD_ID_RV_SPEED:
@@ -47,14 +48,47 @@ def parseCommand(cmd):
     elif cmd_id == CMD_ID_SERVO_POS:
         servo_id = cmd[1]
         pos = cmd[2]
-        ret.update({KEY_SERVO_ID:servo_id, KEY_SERVO_POS:pos})
+        ret.update({KEY_SERVO_POS:[servo_id, pos]})
+    else:
+        logger.error("invalid cmd id")
+        return None
+    return ret
+    
+def parseCommand(cmd):
+    cmd_id = struct.unpack("!B", cmd[0])[0]
+    ret = {KEY_CMD_ID:cmd_id}
+    if cmd_id == CMD_ID_RV_SPEED:
+        ls = struct.unpack("!b", cmd[1])[0]
+        rs = struct.unpack("!b", cmd[2])[0]
+        ret.update({KEY_RV_SPEED:[ls, rs]})
+    elif cmd_id == CMD_ID_SERVO_POS:
+        servo_id = struct.unpack("!B", cmd[1])[0]
+        pos = struct.unpack("!B", cmd[2])[0]
+        ret.update({KEY_SERVO_POS:[servo_id, pos]})
     else:
         logger.error("invalid cmd id")
         return None
     return ret
 
-def parseMessage(msg):
+def parseMessage_old(msg):
     msgtype = msg[0]
+    ret = {KEY_MSG_TYPE:msgtype}
+    if msgtype == MSG_TYPE_RAW:
+        rawdata = msg[1:]
+        ret.update({KEY_MSG_RAW:rawdata})
+    elif msgtype == MSG_TYPE_CMD:
+        cmd_dict = parseCommand(msg[1:])
+        if cmd_dict == None:
+            logger.error("parseCommand failed")
+            return None
+        ret.update({KEY_MSG_CMD:cmd_dict})
+    else:
+        logger.error("invalid msg type")
+        return None
+    return ret
+    
+def parseMessage(msg):
+    msgtype = struct.unpack("!B", msg[0])[0]
     ret = {KEY_MSG_TYPE:msgtype}
     if msgtype == MSG_TYPE_RAW:
         rawdata = msg[1:]

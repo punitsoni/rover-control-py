@@ -91,7 +91,7 @@ class ControlServer():
         total_rx = len(data)
         lenInfo = data
         while total_rx < recv_count:
-            data = s.recv(recv_count - total_rx)#.decode("ascii")
+            data = s.recv(recv_count - total_rx)
             if data == 0:
                 return None
             total_rx += len(data)
@@ -100,18 +100,17 @@ class ControlServer():
         recv_count = self.decodeFrameLen(lenInfo)
         logger.info("length = %d" % recv_count)
         
-        data = s.recv(recv_count).decode("ascii")
+        data = s.recv(recv_count)
         total_rx = len(data)
         msg = data
         while total_rx < recv_count:
-            data = s.recv(recv_count - total_rx)#.decode("ascii")
+            data = s.recv(recv_count - total_rx)
             if data == 0:
                 return None            
             total_rx += len(data)
             msg = msg + data
-        logger.info("msg = " + msg)
-        for i in range(0, len(msg)-1):
-        	logger.info("msg[%d] = %s" % (i, msg[i]))
+        #msg = map(ord, msg)
+        #logger.debug("msg = " + str(msg))
         return msg
         
     def run(self):
