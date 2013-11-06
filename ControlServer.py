@@ -18,7 +18,7 @@ def setLoglevel(level):
 class MsgListener:
     """Abstract Listner class for control messages."""
 
-    def handleNewMsg(self):
+    def handleNewMsg(self, msg):
         raise NotImplementedError("Method not implemented")
 
 class _MyReqHandler(SocketServer.BaseRequestHandler):
@@ -31,7 +31,13 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
             return None
         total_rx = len(data)
         lenInfo = data
-        #msg = data
+        # temp
+        b = map(ord, lenInfo)
+        logger.info("msg bytes = " + str(b))
+        if self.server.listener is not None:
+            self.server.listener.handleNewMsg(lenInfo)
+        return
+        # /temp
         while total_rx < recv_count:
             data = s.recv(recv_count - total_rx)
             if data == 0:
