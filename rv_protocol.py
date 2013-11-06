@@ -28,7 +28,12 @@ MSG_TYPE_MAX        = 255
 CMD_ID_RV_SPEED     = 0
 CMD_ID_SERVO_POS    = 1
 CMD_ID_RESET        = 2
+CMD_ID_GET_STATUS   = 3
 CMD_ID_MAX          = 255
+
+#status
+STATUS_ID_RV_SPEED = 0
+STATUS_ID_SERVO_POS = 1
 
 KEY_MSG_TYPE = "msg-type"
 KEY_MSG_TIMESTAMP = "msg_timestamp"
@@ -53,6 +58,20 @@ def parseCommand_old(cmd):
         logger.error("invalid cmd id")
         return None
     return ret
+    
+def createStatusMsg(s):
+    msg = struct.pack(">B", MSG_TYPE_STATUS)
+    if KEY_RV_SPEED in s:
+        [ls, rs] = s[KEY_RV_SPEED]
+        msg += struct.pack(">B", STATUS_ID_RV_SPEED)
+        msg += struct.pack(">b", ls)
+        msg += struct.pack(">b", rs)
+    if KEY_SERVO_POS in s:
+        [sid, pos] = s[KEY_SERVO_POS]
+        msg += struct.pack(">B", STATUS_ID_SERVO_POS)
+        msg += struct.pack(">B", sid)
+        msg += struct.pack(">B", pos)
+    return msg
     
 def parseCommand(cmd):
     cmd_id = struct.unpack("!B", cmd[0])[0]

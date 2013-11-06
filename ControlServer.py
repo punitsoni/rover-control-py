@@ -2,6 +2,7 @@
 
 import SocketServer
 import logging
+import struct
 
 # setup logging for module
 logger = logging.getLogger(__name__)
@@ -35,7 +36,9 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
         b = map(ord, lenInfo)
         logger.info("msg bytes = " + str(b))
         if self.server.listener is not None:
-            self.server.listener.handleNewMsg(lenInfo)
+            response = self.server.listener.handleNewMsg(lenInfo)
+            logger.info("response = " + str(map(ord, response)))
+            s.sendall(response)
         return
         # /temp
         while total_rx < recv_count:
@@ -72,17 +75,21 @@ class _MyTCPServer(SocketServer.TCPServer):
 
 class Server:
     """Server class that listens to control commands"""
-    HOST, PORT = "", 9999
+    PORT = 9999
     
-    def __init__(self, listener=None):
-        self.tserver = _MyTCPServer((self.HOST, self.PORT), _MyReqHandler)
+    def __init__(self, listener=None, port=None):
+        if port == None:
+            port = self.PORT
+        self.tserver = _MyTCPServer(("", port), _MyReqHandler)
         self.tserver.setListner(listener)
         
     def serveForever(self):
         self.tserver.serve_forever()
         
     def sendMsg(self, msg):
-        logger.info("sending message")
+        logger.info("len = %d" % len(msg))
+        data = struct.pack(">I", len(msg))
+        logger.info("sending message bytes: " + str(map(ord, msg)))
 
 if __name__ == "__main__":
     setLoglevel(logging.INFO)
