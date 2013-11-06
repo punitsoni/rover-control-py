@@ -17,7 +17,7 @@ def setLoglevel(level):
 
 class MsgListener:
     """Abstract Listner class for control messages."""
-    
+
     def handleNewMsg(self):
         raise NotImplementedError("Method not implemented")
 
