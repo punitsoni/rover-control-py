@@ -82,7 +82,8 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
         
 
 class _MyTCPServer(SocketServer.TCPServer):
-
+    allow_reuse_address = True
+    
     def setListner(self, listener):
         self.listener = listener
 
