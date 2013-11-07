@@ -18,7 +18,8 @@ def readNumber():
 
 def sendMsg(msg):
     for b in msg:
-        writeNumber(b)
+        print "writing byte %d" % (b & 0xff)
+        bus.write_byte(address, b & 0xff)
 
 def receiveData():
     data = 0;
@@ -35,7 +36,8 @@ while True:
     line = sys.stdin.readline()
     if line == "exit\n":
         break
-
+    #sendMsg([10, 11, 12, 13])
+    writeNumber(123)
     number = receiveData()
     #number = readNumber()
     print "status = ", number
