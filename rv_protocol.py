@@ -31,6 +31,10 @@ CMD_ID_RESET        = 2
 CMD_ID_GET_STATUS   = 3
 CMD_ID_MAX          = 255
 
+#response
+RESP_ACK = 10
+RESP_NACK = 11
+
 #status
 STATUS_ID_RV_SPEED = 0
 STATUS_ID_SERVO_POS = 1

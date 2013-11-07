@@ -24,15 +24,22 @@ class MsgListener:
 
 class _MyReqHandler(SocketServer.BaseRequestHandler):
 
+    FLAG_ACK = 1
+    FLAG_NACK = 2
+
+    def respond(self, flag, msg=""):
+        data = chr(flag) + msg
+        self.request.sendall(data)
+
     def handle(self):
         s = self.request
         recv_count = 4
         data = s.recv(recv_count)
         if data == 0:
-            return None
+            return
         total_rx = len(data)
         lenInfo = data
-        # temp
+        """# temp
         b = map(ord, lenInfo)
         logger.info("msg bytes = " + str(b))
         if self.server.listener is not None:
@@ -40,25 +47,30 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
             logger.info("response = " + str(map(ord, response)))
             s.sendall(response)
         return
-        # /temp
+        # /temp"""
         while total_rx < recv_count:
             data = s.recv(recv_count - total_rx)
             if data == 0:
-                return None
+                return
             total_rx += len(data)
             lenInfo = lenInfo + data
 
         recv_count = (ord(lenInfo[0]) +	(ord(lenInfo[1]) << 8) +
             (ord(lenInfo[2]) << 16) + (ord(lenInfo[3]) << 24))
-        logger.info("msg_length = %d" % recv_count)
-        
+        logger.info("lenInfo = %s, msg_length = %d" %
+            (str(map(ord, lenInfo)), recv_count))
+        if recv_count > 1024:
+            logger.info("size more than 1024 not supportedmsg_length = %d"
+                % recv_count)
+            self.respond(self.FLAG_NACK)
+            return
         data = s.recv(recv_count)
         total_rx = len(data)
         msg = data
         while total_rx < recv_count:
             data = s.recv(recv_count - total_rx)
             if data == 0:
-                return None            
+                return            
             total_rx += len(data)
             msg = msg + data
         if self.server.listener is not None:
@@ -66,6 +78,7 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
         else:
             b = map(ord, msg)
             logger.info("msg bytes = " + str(b))
+        self.respond(self.FLAG_ACK)
         
 
 class _MyTCPServer(SocketServer.TCPServer):
