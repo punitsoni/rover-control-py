@@ -10,9 +10,9 @@ import sys
 
 host = 'localhost'
 port = 9999
-#s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print "connecting to server..."
-#s.connect((host,port))
+s.connect((host,port))
 print "connected"
 
 testMsg = ([4, 0, 0, 0, 0, 97, 98, 99],
@@ -27,14 +27,14 @@ while 1:
     line = sys.stdin.readline()
     if line == 'exit\n':
         break
-    s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s1.connect((host, port))
+    #s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #s1.connect((host, port))
     print "sending test msg %d : %s" % (i%N, str(testMsg[i%N]))
-    #s.send(''.join(map(chr, testMsg[i%N])))
-    #data = s.recv(1024)
-    s1.send(''.join(map(chr, testMsg[i%N])))
-    data = s1.recv(1024)
-    s1.close()
+    s.send(''.join(map(chr, testMsg[i%N])))
+    data = s.recv(1024)
+    #s1.send(''.join(map(chr, testMsg[i%N])))
+    #data = s1.recv(1024)
+    #s1.close()
     if data == None:
         print "server disconnected"
         break
@@ -44,4 +44,4 @@ while 1:
     
     #sys.stdout.write(data + "\n")
     i += 1
-#s.close()
+s.close()

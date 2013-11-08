@@ -64,7 +64,7 @@ class RvController(ControlServer.MsgListener):
     
 
 # main #
-ControlServer.setLoglevel(logging.INFO)
+ControlServer.setLoglevel(logging.DEBUG)
 controller = RvController()
 
 print "starting controller"
