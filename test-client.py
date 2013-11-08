@@ -27,21 +27,17 @@ while 1:
     line = sys.stdin.readline()
     if line == 'exit\n':
         break
-    #s1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #s1.connect((host, port))
+
     print "sending test msg %d : %s" % (i%N, str(testMsg[i%N]))
     s.send(''.join(map(chr, testMsg[i%N])))
     data = s.recv(1024)
-    #s1.send(''.join(map(chr, testMsg[i%N])))
-    #data = s1.recv(1024)
-    #s1.close()
+
     if data == None:
         print "server disconnected"
         break
     
     rx_bytes = map(ord, data)
     print "received: ", str(rx_bytes)
-    
-    #sys.stdout.write(data + "\n")
     i += 1
+
 s.close()

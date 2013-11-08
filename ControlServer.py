@@ -61,24 +61,23 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
                 (ord(lenInfo[2]) << 16) + (ord(lenInfo[3]) << 24))
             logger.info("lenInfo = %s, msg_length = %d" %
                 (str(map(ord, lenInfo)), msglen))
-                
+
             if msglen > 1024:
                 logger.info("size more than 1024 not supportedmsg_length = %d"
                     % msglen)
                 self.respond(self.FLAG_NACK)
                 return None
-                
+
             msg = self._recvNBytes(s, msglen)
             if msg == None:
                 break
 
-            b = map(ord, msg)
-            logger.info("msg bytes = " + str(b))
+            logger.info("msg bytes = " + str(map(ord, msg)))
             if self.server.listener is not None:
                 self.server.listener.handleNewMsg(msg)
             self.respond(self.FLAG_ACK)
         logger.info("Client disconnected.")
-        
+
 
 class _MyTCPServer(SocketServer.TCPServer):
     allow_reuse_address = True
@@ -98,11 +97,6 @@ class Server:
         
     def serveForever(self):
         self.tserver.serve_forever()
-        
-    def sendMsg(self, msg):
-        logger.info("len = %d" % len(msg))
-        data = struct.pack(">I", len(msg))
-        logger.info("sending message bytes: " + str(map(ord, msg)))
 
 if __name__ == "__main__":
     setLoglevel(logging.INFO)
