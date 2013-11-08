@@ -57,7 +57,7 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
             if lenInfo == None:
                 break
 
-            msglen = (ord(lenInfo[0]) +	(ord(lenInfo[1]) << 8) +
+            msglen = (ord(lenInfo[0]) + (ord(lenInfo[1]) << 8) +
                 (ord(lenInfo[2]) << 16) + (ord(lenInfo[3]) << 24))
             logger.info("lenInfo = %s, msg_length = %d" %
                 (str(map(ord, lenInfo)), msglen))
@@ -81,20 +81,20 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
 
 class _MyTCPServer(SocketServer.TCPServer):
     allow_reuse_address = True
-    
+
     def setListner(self, listener):
         self.listener = listener
 
 class Server:
     """Server class that listens to control commands"""
     PORT = 9999
-    
+
     def __init__(self, listener=None, port=None):
         if port == None:
             port = self.PORT
         self.tserver = _MyTCPServer(("", port), _MyReqHandler)
         self.tserver.setListner(listener)
-        
+
     def serveForever(self):
         self.tserver.serve_forever()
 

@@ -20,15 +20,15 @@ class RvController(ControlServer.MsgListener):
         self.lspeed = 0
         self.rspeed = 0
         self.pos = 0
-    
+
     def run(self):
         self.server.serveForever()
-    
+
     def setRoverSpeed(self, ls, rs):
         print "setting speed, %d %d" % (ls, rs)
         self.lspeed = ls
         self.rspeed = rs
-        
+
     def setServoPos(self, id, pos):
         print "setting servo pos, id=%d pos=%d" % (id, pos)
         self.pos = pos
@@ -42,7 +42,7 @@ class RvController(ControlServer.MsgListener):
         elif cmd_id == rv_protocol.CMD_ID_SERVO_POS:
             [servo_id, pos] = cmd_dict[rv_protocol.KEY_SERVO_POS]
             self.setServoPos(servo_id, pos)
-            
+
     def handleNewMsg(self, msg):
         msg_dict = rv_protocol.parseMessage(msg)
         print "msg_dict = ", msg_dict
@@ -54,14 +54,14 @@ class RvController(ControlServer.MsgListener):
             self.handleCommand(msg_dict[rv_protocol.KEY_MSG_CMD])
         else:
             print "msg_type not supported"
-            
+
     def sendStatus(self):
         status = {rv_protocol.KEY_RV_SPEED:[self.lspeed, self.rspeed]}
         status.update({rv_protocol.KEY_SERVO_POS:[12, self.pos]})
         msg = rv_protocol.createStatusMsg(status)
         return msg
         #self.server.sendMsg(msg)
-    
+
 
 # main #
 ControlServer.setLoglevel(logging.DEBUG)

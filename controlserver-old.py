@@ -99,20 +99,20 @@ class ControlServer():
 
         recv_count = self.decodeFrameLen(lenInfo)
         logger.info("length = %d" % recv_count)
-        
+
         data = s.recv(recv_count)
         total_rx = len(data)
         msg = data
         while total_rx < recv_count:
             data = s.recv(recv_count - total_rx)
             if data == 0:
-                return None            
+                return None
             total_rx += len(data)
             msg = msg + data
         #msg = map(ord, msg)
         #logger.debug("msg = " + str(msg))
         return msg
-        
+
     def run(self):
         self.openSocket()
         input = [self.server]

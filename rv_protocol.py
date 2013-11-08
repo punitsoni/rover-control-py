@@ -7,7 +7,7 @@
 # |length:1|0x01|cmd_id:1|cmd_data:(length - 2)|
 
 import logging
-import struct 
+import struct
 
 # setup logging for module
 logger = logging.getLogger(__name__)
@@ -62,7 +62,7 @@ def parseCommand_old(cmd):
         logger.error("invalid cmd id")
         return None
     return ret
-    
+
 def createStatusMsg(s):
     msg = struct.pack(">B", MSG_TYPE_STATUS)
     if KEY_RV_SPEED in s:
@@ -76,7 +76,7 @@ def createStatusMsg(s):
         msg += struct.pack(">B", sid)
         msg += struct.pack(">B", pos)
     return msg
-    
+
 def parseCommand(cmd):
     cmd_id = struct.unpack("!B", cmd[0])[0]
     ret = {KEY_CMD_ID:cmd_id}
@@ -109,7 +109,7 @@ def parseMessage_old(msg):
         logger.error("invalid msg type")
         return None
     return ret
-    
+
 def parseMessage(msg):
     msgtype = struct.unpack("!B", msg[0])[0]
     ret = {KEY_MSG_TYPE:msgtype}

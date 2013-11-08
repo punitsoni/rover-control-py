@@ -18,7 +18,7 @@ print "connected"
 testMsg = ([4, 0, 0, 0, 0, 97, 98, 99],
            [4, 0, 0, 0, 0, 66, 67, 68],
            [4, 0, 0, 0, 1, 0, 60, 70])
-           
+
 N = len(testMsg)
 i=0
 
@@ -35,7 +35,7 @@ while 1:
     if data == None:
         print "server disconnected"
         break
-    
+
     rx_bytes = map(ord, data)
     print "received: ", str(rx_bytes)
     i += 1
