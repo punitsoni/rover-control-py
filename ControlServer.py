@@ -31,16 +31,14 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
         data = chr(flag) + msg
         self.request.sendall(data)
 
-    def _recvNBytes(self, s, n):
-        recv_count = n
-        data = s.recv(recv_count)
+    def recv_n_bytes(self, s, n):
+        data = s.recv(n)
         if data == None or len(data) == 0:
             return None
         total_rx = len(data)
         final_data = data
-
-        while total_rx < recv_count:
-            data = s.recv(recv_count - total_rx)
+        while total_rx < n:
+            data = s.recv(n - total_rx)
             if data == None or len(data) == 0:
                 return None
             total_rx += len(data)
@@ -50,10 +48,9 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
     # handles one client connection
     def handle(self):
         s = self.request
-        connected = True
         # run while client is connected
         while True:
-            lenInfo = self._recvNBytes(s, 4)
+            lenInfo = self.recv_n_bytes(s, 4)
             if lenInfo == None:
                 break
 
@@ -68,7 +65,7 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
                 self.respond(self.FLAG_NACK)
                 return None
 
-            msg = self._recvNBytes(s, msglen)
+            msg = self.recv_n_bytes(s, msglen)
             if msg == None:
                 break
 

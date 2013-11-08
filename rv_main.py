@@ -62,6 +62,9 @@ class RvController(ControlServer.MsgListener):
         return msg
         #self.server.sendMsg(msg)
 
+def main_abort():
+    print ""
+    print "controller aborted"
 
 # main #
 ControlServer.setLoglevel(logging.DEBUG)
@@ -69,6 +72,11 @@ controller = RvController()
 
 print "starting controller"
 
-controller.run()
+try:
+    controller.run()
+except(KeyboardInterrupt):
+    main_abort()
+    
+    
 
 
