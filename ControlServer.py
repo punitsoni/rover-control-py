@@ -31,56 +31,45 @@ class _MyReqHandler(SocketServer.BaseRequestHandler):
         data = chr(flag) + msg
         self.request.sendall(data)
 
+    def _recvNBytes(self, s, n):
+        recv_count = n
+        data = s.recv(recv_count)
+        if data == None or len(data) == 0:
+            return None
+        total_rx = len(data)
+        final_data = data
+
+        while total_rx < recv_count:
+            data = s.recv(recv_count - total_rx)
+            if data == None or len(data) == 0:
+                return None
+            total_rx += len(data)
+            final_data += data
+        return final_data
+
     # handles one client connection
     def handle(self):
         s = self.request
         connected = True
         # run while client is connected
-        while connected == True:
-            recv_count = 4
-            logger.debug("recv 1")
-            data = s.recv(recv_count)
-            if data == None or len(data) == 0:
-                break
-            total_rx = len(data)
-            lenInfo = data
-            
-            while total_rx < recv_count:
-                logger.debug("recv_count=%d, total_rx = %d" %
-                    (recv_count, total_rx))
-                logger.debug("recv 2")
-                data = s.recv(recv_count - total_rx)
-                if data == None or len(data) == 0:
-                    connected = False
-                    break
-                total_rx += len(data)
-                lenInfo = lenInfo + data
-            
-            if connected == False:
+        while True:
+            lenInfo = self._recvNBytes(s, 4)
+            if lenInfo == None:
                 break
 
-            recv_count = (ord(lenInfo[0]) +	(ord(lenInfo[1]) << 8) +
+            msglen = (ord(lenInfo[0]) +	(ord(lenInfo[1]) << 8) +
                 (ord(lenInfo[2]) << 16) + (ord(lenInfo[3]) << 24))
             logger.info("lenInfo = %s, msg_length = %d" %
-                (str(map(ord, lenInfo)), recv_count))
-            if recv_count > 1024:
-                logger.info("size more than 1024 not supportedmsg_length = %d"
-                    % recv_count)
-                self.respond(self.FLAG_NACK)
-                return
-            data = s.recv(recv_count)
-            total_rx = len(data)
-            msg = data
-            while total_rx < recv_count:
-                data = s.recv(recv_count - total_rx)
-                logger.debug("recv 3")
-                if data == None or len(data) == 0:
-                    connected = False
-                    break         
-                total_rx += len(data)
-                msg = msg + data
+                (str(map(ord, lenInfo)), msglen))
                 
-            if connected == False:
+            if msglen > 1024:
+                logger.info("size more than 1024 not supportedmsg_length = %d"
+                    % msglen)
+                self.respond(self.FLAG_NACK)
+                return None
+                
+            msg = self._recvNBytes(s, msglen)
+            if msg == None:
                 break
 
             b = map(ord, msg)
