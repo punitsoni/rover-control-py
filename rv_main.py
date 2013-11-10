@@ -3,6 +3,7 @@
 import logging
 import ControlServer
 import rv_protocol
+import rv_interface as rv
 
 # setup logging for module
 logger = logging.getLogger(__name__)
@@ -20,14 +21,10 @@ class RvController(ControlServer.MsgListener):
         self.lspeed = 0
         self.rspeed = 0
         self.pos = 0
+        rv.init()
 
     def run(self):
         self.server.serveForever()
-
-    def setRoverSpeed(self, ls, rs):
-        print "setting speed, %d %d" % (ls, rs)
-        self.lspeed = ls
-        self.rspeed = rs
 
     def setServoPos(self, id, pos):
         print "setting servo pos, id=%d pos=%d" % (id, pos)
@@ -38,7 +35,7 @@ class RvController(ControlServer.MsgListener):
         print "cmd_id = ", cmd_id
         if cmd_id == rv_protocol.CMD_ID_RV_SPEED:
             [ls, rs] = cmd_dict[rv_protocol.KEY_RV_SPEED]
-            self.setRoverSpeed(ls, rs)
+            rv.setRoverSpeed(ls, rs)
         elif cmd_id == rv_protocol.CMD_ID_SERVO_POS:
             [servo_id, pos] = cmd_dict[rv_protocol.KEY_SERVO_POS]
             self.setServoPos(servo_id, pos)
