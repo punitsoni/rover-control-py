@@ -1,11 +1,8 @@
 #!/usr/bin/python
 
 import logging
-import controlserver
+import ControlServer
 import rv_protocol
-import sys
-import select
-import os
 
 # setup logging for module
 logger = logging.getLogger(__name__)
@@ -16,54 +13,70 @@ formatter = logging.Formatter('%(levelname)s %(name)s:%(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-def setRoverSpeed(ls, rs):
-	print "setting speed, %d %d" % (ls, rs)
-	
-def setServoPos(id, pos):
-	print "setting servo pos, id=%d pos=%d" % (id, pos)
+class RvController(ControlServer.MsgListener):
 
-def handleCommand(cmd_dict):
-	cmd_id = cmd_dict[rv_protocol.KEY_CMD_ID]
-	print "cmd_id = ", cmd_id
-	if cmd_id == rv_protocol.CMD_ID_RV_SPEED:
-		[ls, rs] = cmd_dict[rv_protocol.KEY_RV_SPEED]
-		setRoverSpeed(ls, rs)
-	elif cmd_id == rv_protocol.CMD_ID_SERVO_POS:
-		[servo_id, pos] = cmd_dict[rv_protocol.KEY_SERVO_POS]
-		setServoPos(servo_id, pos)
-		
-def handleNewMsg(msg):
-	msg_dict = rv_protocol.parseMessage(msg)
-	print "msg_dict = ", msg_dict
-	if msg_dict[rv_protocol.KEY_MSG_TYPE] == rv_protocol.MSG_TYPE_RAW:
-		print "raw_message = ", msg_dict[rv_protocol.KEY_MSG_RAW]
-	elif msg_dict[rv_protocol.KEY_MSG_TYPE] == rv_protocol.MSG_TYPE_CMD:
-		handleCommand(msg_dict[rv_protocol.KEY_MSG_CMD])
-	else:
-		print "msg_type not supported"
+    def __init__(self):
+        self.server = ControlServer.Server(self, 50000)
+        self.lspeed = 0
+        self.rspeed = 0
+        self.pos = 0
 
-def controlEventCb(event, data):
-	print "event = " + str(event)
-	if(event == controlserver.EVENT_SERVER_FINISHED):
-		print "server finished, exiting"
-		os._exit(0)
-	elif event == controlserver.EVENT_NEW_MSG:
-		handleNewMsg(data)
+    def run(self):
+        self.server.serveForever()
+
+    def setRoverSpeed(self, ls, rs):
+        print "setting speed, %d %d" % (ls, rs)
+        self.lspeed = ls
+        self.rspeed = rs
+
+    def setServoPos(self, id, pos):
+        print "setting servo pos, id=%d pos=%d" % (id, pos)
+        self.pos = pos
+
+    def handleCommand(self, cmd_dict):
+        cmd_id = cmd_dict[rv_protocol.KEY_CMD_ID]
+        print "cmd_id = ", cmd_id
+        if cmd_id == rv_protocol.CMD_ID_RV_SPEED:
+            [ls, rs] = cmd_dict[rv_protocol.KEY_RV_SPEED]
+            self.setRoverSpeed(ls, rs)
+        elif cmd_id == rv_protocol.CMD_ID_SERVO_POS:
+            [servo_id, pos] = cmd_dict[rv_protocol.KEY_SERVO_POS]
+            self.setServoPos(servo_id, pos)
+
+    def handleNewMsg(self, msg):
+        msg_dict = rv_protocol.parseMessage(msg)
+        print "msg_dict = ", msg_dict
+        if msg_dict is None:
+            return self.sendStatus()
+        if msg_dict[rv_protocol.KEY_MSG_TYPE] == rv_protocol.MSG_TYPE_RAW:
+            print "raw_message = ", msg_dict[rv_protocol.KEY_MSG_RAW]
+        elif msg_dict[rv_protocol.KEY_MSG_TYPE] == rv_protocol.MSG_TYPE_CMD:
+            self.handleCommand(msg_dict[rv_protocol.KEY_MSG_CMD])
+        else:
+            print "msg_type not supported"
+
+    def sendStatus(self):
+        status = {rv_protocol.KEY_RV_SPEED:[self.lspeed, self.rspeed]}
+        status.update({rv_protocol.KEY_SERVO_POS:[12, self.pos]})
+        msg = rv_protocol.createStatusMsg(status)
+        return msg
+        #self.server.sendMsg(msg)
+
+def main_abort():
+    print ""
+    print "controller aborted"
 
 # main #
-controlserver.setLoglevel(logging.INFO)
-server = controlserver.ControlServer()
-server.start(controlEventCb)
+ControlServer.setLoglevel(logging.DEBUG)
+controller = RvController()
 
-while True:
-        input = [sys.stdin]
-        inputready,outputready,exceptready = select.select(input,[],[])
-        for s in inputready:
-            if s == sys.stdin:
-                junk = sys.stdin.readline()
-                print "BYE"
-                os._exit(0)
+print "starting controller"
 
-
+try:
+    controller.run()
+except(KeyboardInterrupt):
+    main_abort()
+    
+    
 
 
