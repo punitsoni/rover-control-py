@@ -16,7 +16,7 @@ logger.addHandler(ch)
 class RvController(ControlServer.MsgListener):
 
     def __init__(self):
-        self.server = ControlServer.Server(self)
+        self.server = ControlServer.Server(self, 50000)
         self.lspeed = 0
         self.rspeed = 0
         self.pos = 0
