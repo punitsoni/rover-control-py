@@ -1,20 +1,14 @@
 #!/usr/bin/python
 
 import smbus
-import time
 import sys
+import time
 
 bus = smbus.SMBus(1)
 
 address = 0x11
 
-def writeNumber(value):
-    bus.write_byte(address, value)
-    return -1
-
-def readNumber():
-    number = bus.read_byte(address)
-    return number
+I2C_DELAY = 0.01
 
 def sendMsg(msg):
     for b in msg:
@@ -29,15 +23,28 @@ def receiveData():
         data += (b << 8*i)
     return data;
 
+def processCmd(cmd, data):
+    # send command
+    bus.write_byte(address, cmd & 0xff)
+    time.sleep(I2C_DELAY)
+    # send data
+    bus.write_byte(address, data & 0xff)
+    time.sleep(I2C_DELAY)
+    # request response
+    res = bus.read_byte(address)
+    return res
 
+cmd_list = [[0, 20], [1, 50], [3, 6]]
+N = len(cmd_list);
+i = 0
 while True:
     sys.stdout.write("% ")
-
     line = sys.stdin.readline()
     if line == "exit\n":
         break
-    #sendMsg([10, 11, 12, 13])
-    writeNumber(123)
-    number = receiveData()
-    #number = readNumber()
-    print "status = ", number
+    print "process cmd ", i, " ", cmd_list[i]
+    val = processCmd(cmd_list[i][0], cmd_list[i][1])
+    i += 1
+    if i == N:
+        i = 0;
+    print "val = ", val

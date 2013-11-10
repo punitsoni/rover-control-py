@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import logging
+import smbus
+import time
 
 # setup logging for module
 logger = logging.getLogger(__name__)
@@ -15,29 +17,48 @@ curRoverSpeed = [0, 0]
 curCamPos = [0, 0]
 curServoPos = {"0":0, "1":60}
 
-def setRoverSpeed(ls, rs):
-    logger.info("setRoverSpeed (%d, %d)" % (ls, rs))
-    curRoverSpeed = [ls, rs]
+class interface:
+    """ i2c based comm protocol
+        each transaction is divided in 3 steps
+        1. send command (1 byte)
+        2. send data (1 byte)
+        3. receive response (1 byte)
+    """
+    I2C_DELAY = 0.01
+    CMD_SET_LSPEED = 0
+    CMD_SET_RSPEED = 1
+    
+    def processCmd(self, cmd, data):
+        bus.write_byte(address, cmd & 0xff)
+        time.sleep(self.I2C_DELAY)
+        bus.write_byte(address, data & 0xff)
+        time.sleep(selfI2C_DELAY)
+        res = bus.read_byte(address)
+        return res
 
-def setCameraPos(pan, tilt):
-    logger.info("setCameraPos (%d, %d)" % (pan, tilt))
-    curCamPos = [pan, tilt]
+    def setRoverSpeed(ls, rs):
+        logger.info("setRoverSpeed (%d, %d)" % (ls, rs))
+        processCmd(CMD_SET_LSPEED, ls)
+        processCmd(CMD_SET_RSPEED, rs)
+        curRoverSpeed = [ls, rs]
 
-def setServoPos(sid, pos):
-    logger.info("setServoPos (%d, %d)" % (sid, pos))
-    if str(sid) is in curServoPos:
-        curServoPo.update({str(sid):pos})
+    def setCameraPos(pan, tilt):
+        logger.info("setCameraPos (%d, %d)" % (pan, tilt))
+        curCamPos = [pan, tilt]
 
-def getRoverSpeed():
-    return curRoverSpeed;
+    def setServoPos(sid, pos):
+        logger.info("setServoPos (%d, %d)" % (sid, pos))
+        if str(sid) is in curServoPos:
+            curServoPo.update({str(sid):pos})
 
-def getCameraPos():
-    return curCamPos;
+    def getRoverSpeed():
+        return curRoverSpeed;
 
-def getServoPos(sid):
-    if str(sid) is in curServoPos:
-        return curServoPos[str(sid)]
-    else:
-        return None
-
-
+    def getCameraPos():
+        return curCamPos;
+    
+    def getServoPos(sid):
+        if str(sid) is in curServoPos:
+            return curServoPos[str(sid)]
+        else:
+            return None
