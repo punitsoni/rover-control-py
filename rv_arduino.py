@@ -8,20 +8,7 @@ bus = smbus.SMBus(1)
 
 address = 0x11
 
-I2C_DELAY = 0.01
-
-def sendMsg(msg):
-    for b in msg:
-        print "writing byte %d" % (b & 0xff)
-        bus.write_byte(address, b & 0xff)
-
-def receiveData():
-    data = 0;
-    for i in range(0, 4):
-        b = bus.read_byte(address)
-        print "b[%d] = %d" % (i, b)
-        data += (b << 8*i)
-    return data;
+I2C_DELAY = 0.05
 
 def processCmd(cmd, data):
     # send command
@@ -36,15 +23,16 @@ def processCmd(cmd, data):
 
 cmd_list = [[0, 20], [1, 50], [3, 6]]
 N = len(cmd_list);
-i = 0
+speed = 0
 while True:
     sys.stdout.write("% ")
     line = sys.stdin.readline()
     if line == "exit\n":
         break
-    print "process cmd ", i, " ", cmd_list[i]
-    val = processCmd(cmd_list[i][0], cmd_list[i][1])
-    i += 1
-    if i == N:
-        i = 0;
-    print "val = ", val
+    speed = int(line.strip());
+    print "speed = ", speed
+    val = processCmd(0, speed)
+    val = processCmd(1, speed)
+    print "response = ", val
+    #if speed == 110:
+    #	speed = -100
